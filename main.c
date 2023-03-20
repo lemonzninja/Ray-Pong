@@ -42,6 +42,8 @@ void StartGame();                  // A function to start the game when the butt
 void DrawGame();                   // A function to draw the game
 void MoveBall();                   // A function to move the ball`
 
+void DrawStart(); // Draw Start on the start button
+
 int main()
 {
     // Initialization
@@ -54,8 +56,8 @@ int main()
     button.width = 50;
     button.height = 50;
     // Set the button position
-    button.x = screenWidth / 2 - button.width / 2;
-    button.y = screenHeight / 2 - button.height / 2;
+    button.x = 350;
+    button.y = 200;
     // Set the box size
     StartButtonBox.size.x = 50;
     StartButtonBox.size.y = 50;
@@ -108,24 +110,21 @@ static void UpdateDrawFrame(void)
 {
     // Update
     //----------------------------------------------------------------------------------
+
+    // Get the mouse position
     mousePosition = GetMousePosition();
 
+    // Check if the mouse is over the button
+    if (CheckCollisionPointRec(mousePosition, button) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+    {
+
+        buttonClicked = true;
+
+        DrawText("Clicked", 10, 10, 20, BLACK);
+    }
+    
     if (CheckCollisionPointRec(mousePosition, button))
     {
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
-        {
-            buttonState = 1;
-        }
-        if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
-        {
-            buttonState = 0;
-            buttonClicked = true;
-
-            // pick a random direction for the ball
-            ball.velocity.x = GetRandomValue(-ballVelocity, ballVelocity);
-            ball.velocity.y = GetRandomValue(-ballVelocity, ballVelocity);
-        }
-
         StartButtonBox.color = LIGHTGRAY;
     }
     else
@@ -144,12 +143,11 @@ static void UpdateDrawFrame(void)
 
     ClearBackground(RAYWHITE);
 
-    DrawText("This is a raylib example", 10, 40, 20, DARKGRAY);
-
     // if game is started,hide the button and show the game
     if (!buttonClicked)
     {
-        DrawRectangleRec(button, StartButtonBox.color);
+
+        DrawStart();
     }
     else
     {
@@ -170,6 +168,14 @@ void DrawGame()
 {
     // Draw the ball
     DrawCircleV(ball.position, ball.radius, ball.color);
+}
+
+// Draw the start button
+void DrawStart()
+{
+
+    DrawRectangleRec(button, StartButtonBox.color);
+    DrawText("Start", button.x + 10, button.y + 10, 20, BLACK);
 }
 
 void MoveBall()

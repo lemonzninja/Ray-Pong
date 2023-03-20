@@ -11,9 +11,9 @@ const int screenHeight = 450;
 Vector2 mousePosition = {0, 0};
 
 // Start Button Variables and Struct
-Rectangle button = {0, 0, 0, 0}; // Button rectangle
+Rectangle StartButtonRectangle = {0, 0, 0, 0}; // Button rectangle
 int buttonState = 0;             // 0 = not clicked, 1 = clicked
-bool buttonClicked = false;      // True if the button is clicked
+bool buttonClicked = false;      // True if the StartButtonRectangle is clicked
 
 typedef struct ButtonBox // A struct to hold the box data
 {
@@ -38,11 +38,11 @@ int ballVelocity = 0;
 // Local Functions Declaration
 //----------------------------------------------------------------------------------
 static void UpdateDrawFrame(void); // Update and draw one frame
-void StartGame();                  // A function to start the game when the button is clicked
+void StartGame();                  // A function to start the game when the StartButtonRectangle is clicked
 void DrawGame();                   // A function to draw the game
 void MoveBall();                   // A function to move the ball`
 
-void DrawStart(); // Draw Start on the start button
+void DrawStart(); // Draw Start on the start StartButtonRectangle
 
 int main()
 {
@@ -51,13 +51,13 @@ int main()
 
     InitWindow(screenWidth, screenHeight, "raylib");
 
-    // The button variables
-    // Set the button size
-    button.width = 50;
-    button.height = 50;
-    // Set the button position
-    button.x = 350;
-    button.y = 200;
+    // The StartButtonRectangle variables
+    // Set the StartButtonRectangle size
+    StartButtonRectangle.width = 50;
+    StartButtonRectangle.height = 50;
+    // Set the StartButtonRectangle position
+    StartButtonRectangle.x = 350;
+    StartButtonRectangle.y = 200;
     // Set the box size
     StartButtonBox.size.x = 50;
     StartButtonBox.size.y = 50;
@@ -91,7 +91,7 @@ int main()
     //--------------------------------------------------------------------------------------
 
     // Main game loop
-    while (!WindowShouldClose()) // Detect window close button or ESC key
+    while (!WindowShouldClose()) // Detect window close StartButtonRectangle or ESC key
     {
         UpdateDrawFrame();
     }
@@ -114,8 +114,8 @@ static void UpdateDrawFrame(void)
     // Get the mouse position
     mousePosition = GetMousePosition();
 
-    // Check if the mouse is over the button
-    if (CheckCollisionPointRec(mousePosition, button) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+    // Check if the mouse is over the StartButtonRectangle
+    if (CheckCollisionPointRec(mousePosition, StartButtonRectangle) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
     {
 
         buttonClicked = true;
@@ -123,7 +123,7 @@ static void UpdateDrawFrame(void)
         DrawText("Clicked", 10, 10, 20, BLACK);
     }
     
-    if (CheckCollisionPointRec(mousePosition, button))
+    if (CheckCollisionPointRec(mousePosition, StartButtonRectangle))
     {
         StartButtonBox.color = LIGHTGRAY;
     }
@@ -143,7 +143,7 @@ static void UpdateDrawFrame(void)
 
     ClearBackground(RAYWHITE);
 
-    // if game is started,hide the button and show the game
+    // if game is started,hide the StartButtonRectangle and show the game
     if (!buttonClicked)
     {
 
@@ -152,13 +152,17 @@ static void UpdateDrawFrame(void)
     else
     {
         DrawGame();
+
+        // Hide the start StartButtonRectangle
+        StartButtonRectangle.x = -1000;
+        StartButtonRectangle.y = -1000;
     }
 
     EndDrawing();
     //----------------------------------------------------------------------------------
 }
 
-// A function to start the game when the button is clicked
+// A function to start the game when the StartButtonRectangle is clicked
 void StartGame()
 {
     MoveBall();
@@ -170,12 +174,11 @@ void DrawGame()
     DrawCircleV(ball.position, ball.radius, ball.color);
 }
 
-// Draw the start button
+// Draw the start StartButtonRectangle
 void DrawStart()
 {
-
-    DrawRectangleRec(button, StartButtonBox.color);
-    DrawText("Start", button.x + 10, button.y + 10, 20, BLACK);
+    DrawRectangleRec(StartButtonRectangle, StartButtonBox.color);
+    DrawText("Start", StartButtonRectangle.x + 10, StartButtonRectangle.y + 10, 20, BLACK);
 }
 
 void MoveBall()

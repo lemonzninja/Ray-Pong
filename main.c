@@ -12,7 +12,6 @@ Vector2 mousePosition = {0, 0};
 
 // Start Button Variables and Struct
 Rectangle StartButtonRectangle = {0, 0, 0, 0}; // Button rectangle
-int buttonState = 0;             // 0 = not clicked, 1 = clicked
 bool buttonClicked = false;      // True if the StartButtonRectangle is clicked
 
 typedef struct ButtonBox // A struct to hold the box data
@@ -71,7 +70,10 @@ int main()
     StartButtonBox.color = RED;
     //--------------------------------------------------------------------------------------
 
-    // The ball variables
+    /*
+        The ball variables
+        ball is the struct that holds the ball data
+    */
     // Set the ball velocity
     ballVelocity = 5;
     // Set the ball size
@@ -120,21 +122,23 @@ static void UpdateDrawFrame(void)
     // Check if the mouse is over the StartButtonRectangle
     if (CheckCollisionPointRec(mousePosition, StartButtonRectangle) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
     {
-
         buttonClicked = true;
-
         DrawText("Clicked", 10, 10, 20, BLACK);
     }
     
+    // Check if the mouse is over the StartButtonRectangle and change the color of the box
     if (CheckCollisionPointRec(mousePosition, StartButtonRectangle))
     {
+        // Set the box color to light gray
         StartButtonBox.color = LIGHTGRAY;
     }
     else
-    {
+    {   
+        // Set the box color to dark gray
         StartButtonBox.color = DARKGRAY;
     }
 
+    // If the StartButtonRectangle is clicked, start the game
     if (buttonClicked)
     {
         StartGame();
@@ -150,10 +154,13 @@ static void UpdateDrawFrame(void)
     if (!buttonClicked)
     {
 
+        // Draw the Start Menu
         DrawStart();
     }
     else
     {
+        // Draw the game
+
         DrawGame();
 
         // Hide the start StartButtonRectangle

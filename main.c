@@ -51,8 +51,11 @@ int main()
 
     InitWindow(screenWidth, screenHeight, "raylib");
 
-    // The StartButtonRectangle variables
-    // Set the StartButtonRectangle size
+    /* 
+        The StartButton variables
+        StartButtonRectangle is the rectangle that will be drawn on the screen
+        StartButtonBox is the struct that holds the box data
+    */
     StartButtonRectangle.width = 50;
     StartButtonRectangle.height = 50;
     // Set the StartButtonRectangle position

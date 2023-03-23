@@ -92,15 +92,15 @@ Paddle enemyPaddle = {0};
 //----------------------------------------------------------------------------------
 static void UpdateDrawFrame(void); // Update and draw one frame
 
-void UpdateStart(); // Update Start on the start StartButtonRectangle
-void DrawStart();   // Draw Start on the start StartButtonRectangle
-void UpdateInfo();  // Update Info on the start StartButtonRectangle
-void DrawInfo();    // A function to draw the info
+void UpdateStartMenu(); // Update Start on the start StartButtonRectangle
+void DrawStartMenu();   // Draw Start on the start StartButtonRectangle
+void UpdateInfoMenu();  // Update Info on the start StartButtonRectangle
+void DrawInfoMenu();    // A function to draw the info
 
 void InitPaddles(); // A function to initialize the paddles
 
 void DrawGame();  // A function to draw the game
-void StartGame(); // A function to start the game when the StartButtonRectangle is clicked
+void StartGameMenu(); // A function to start the game when the StartButtonRectangle is clicked
 
 void MoveBall(); // A function to move the ball`
 
@@ -229,12 +229,12 @@ static void UpdateDrawFrame(void)
     {
     case START:
     {
-        UpdateStart();
+        UpdateStartMenu();
     }
     break;
     case INFO:
     { // Draw the info screen
-        UpdateInfo();
+        UpdateInfoMenu();
     }
     break;
     case GAME:
@@ -256,12 +256,12 @@ static void UpdateDrawFrame(void)
     {
     case START:
     {
-        DrawStart();
+        DrawStartMenu();
     }
     break;
     case INFO:
     { // Draw the info screen
-        DrawInfo();
+        DrawInfoMenu();
     }
     break;
     default:
@@ -272,7 +272,7 @@ static void UpdateDrawFrame(void)
     //----------------------------------------------------------------------------------
 }
 
-void UpdateStart()
+void UpdateStartMenu()
 {
     // Check if the mouse is over the StartButtonRectangle
     if (CheckCollisionPointRec(mousePosition, StartButtonRectangle) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
@@ -288,7 +288,7 @@ void UpdateStart()
 }
 
 // Draw the start StartButtonRectangle
-void DrawStart()
+void DrawStartMenu()
 {
     // Draw the title text size 100 in the center of the screen above the StartButtonRectangle
     DrawText(title, screenWidth / 2 - MeasureText(title, 100) / 2, screenHeight / 2 - 200, 100, BLACK);
@@ -328,12 +328,12 @@ void DrawStart()
 }
 
 // A function to start the game when the StartButtonRectangle is clicked
-void StartGame()
+void StartGameMenu()
 {
     MoveBall();
 }
 // A function to update the info screen
-void UpdateInfo()
+void UpdateInfoMenu()
 {
     // Check if the mouse is over the BackButtonRectangle
     if (CheckCollisionPointRec(mousePosition, BackButtonRectangle) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
@@ -343,7 +343,7 @@ void UpdateInfo()
 }
 
 // Draw the info screen
-void DrawInfo()
+void DrawInfoMenu()
 {
     // Draw the title text size 100 in the center of the screen above the StartButtonRectangle
     DrawText("Abut", screenWidth / 2 - MeasureText(title, 100) / 2, screenHeight / 2 - 200, 100, BLACK);
@@ -363,42 +363,6 @@ void DrawInfo()
     {
         // Set the box color to dark gray
         BackButtonBox.color = DARKGRAY;
-    }
-}
-
-void DrawGame()
-{
-    // Draw the ball
-    DrawCircleV(ball.position, ball.radius, ball.color);
-
-    // Draw the player paddle
-    DrawRectangleV(playerPaddle.position, playerPaddle.size, playerPaddle.color);
-    // Draw the enemy paddle
-    DrawRectangleV(enemyPaddle.position, enemyPaddle.size, enemyPaddle.color);
-}
-
-void MoveBall()
-{
-    // Move the ball
-    ball.position.x += ball.velocity.x;
-    ball.position.y += ball.velocity.y;
-
-    // Check for collision with the walls
-    if (ball.position.x >= screenWidth - ball.radius)
-    {
-        ball.velocity.x *= -1;
-    }
-    else if (ball.position.x <= 0 + ball.radius)
-    {
-        ball.velocity.x *= -1;
-    }
-    else if (ball.position.y >= screenHeight - ball.radius)
-    {
-        ball.velocity.y *= -1;
-    }
-    else if (ball.position.y <= 0 + ball.radius)
-    {
-        ball.velocity.y *= -1;
     }
 }
 
@@ -437,4 +401,40 @@ void InitPaddles()
     enemyPaddle.velocity.y = 0;
     // Set the paddle color
     enemyPaddle.color = RED;
+}
+
+void DrawGame()
+{
+    // Draw the ball
+    DrawCircleV(ball.position, ball.radius, ball.color);
+
+    // Draw the player paddle
+    DrawRectangleV(playerPaddle.position, playerPaddle.size, playerPaddle.color);
+    // Draw the enemy paddle
+    DrawRectangleV(enemyPaddle.position, enemyPaddle.size, enemyPaddle.color);
+}
+
+void MoveBall()
+{
+    // Move the ball
+    ball.position.x += ball.velocity.x;
+    ball.position.y += ball.velocity.y;
+
+    // Check for collision with the walls
+    if (ball.position.x >= screenWidth - ball.radius)
+    {
+        ball.velocity.x *= -1;
+    }
+    else if (ball.position.x <= 0 + ball.radius)
+    {
+        ball.velocity.x *= -1;
+    }
+    else if (ball.position.y >= screenHeight - ball.radius)
+    {
+        ball.velocity.y *= -1;
+    }
+    else if (ball.position.y <= 0 + ball.radius)
+    {
+        ball.velocity.y *= -1;
+    }
 }

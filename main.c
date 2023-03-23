@@ -44,6 +44,7 @@ typedef struct ButtonBox // A struct to hold the box data
     Vector2 position;
     Vector2 size;
     Color color;
+
 } ButtonBox;
 
 // Start Button Variables and Struct
@@ -74,6 +75,19 @@ typedef struct Ball
 Ball ball = {0};
 int ballVelocity = 0;
 
+// a struct to hold the paddle data
+typedef struct Paddle
+{
+    Vector2 position;
+    Vector2 size;
+    Color color;
+    Vector2 velocity;
+} Paddle;
+
+// Paddle Variables
+Paddle playerPaddle = {0};
+Paddle enemyPaddle = {0};
+
 // Local Functions Declaration
 //----------------------------------------------------------------------------------
 static void UpdateDrawFrame(void); // Update and draw one frame
@@ -82,10 +96,13 @@ void UpdateStart(); // Update Start on the start StartButtonRectangle
 void DrawStart();   // Draw Start on the start StartButtonRectangle
 void UpdateInfo();  // Update Info on the start StartButtonRectangle
 void DrawInfo();    // A function to draw the info
-void DrawGame();    // A function to draw the game
 
+void InitPaddles(); // A function to initialize the paddles
+
+void DrawGame();  // A function to draw the game
 void StartGame(); // A function to start the game when the StartButtonRectangle is clicked
-void MoveBall();  // A function to move the ball`
+
+void MoveBall(); // A function to move the ball`
 
 int main()
 {
@@ -174,6 +191,9 @@ int main()
 
     //--------------------------------------------------------------------------------------
 
+    // Initialize the paddles
+    InitPaddles();
+
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 60, 1);
 #else
@@ -204,7 +224,6 @@ static void UpdateDrawFrame(void)
     // Get the mouse position
     mousePosition = GetMousePosition();
 
-    
     // a SWITCH statement to change the current game state
     switch (currentScreen)
     {
@@ -253,19 +272,18 @@ static void UpdateDrawFrame(void)
     //----------------------------------------------------------------------------------
 }
 
-
 void UpdateStart()
 {
     // Check if the mouse is over the StartButtonRectangle
     if (CheckCollisionPointRec(mousePosition, StartButtonRectangle) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
     {
+        currentScreen = GAME;
     }
-
 
     // Check if the mouse is over the InfoButtonRectangle
     if (CheckCollisionPointRec(mousePosition, InfoButtonRectangle) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
     {
-       currentScreen = INFO;
+        currentScreen = INFO;
     }
 }
 
@@ -352,6 +370,11 @@ void DrawGame()
 {
     // Draw the ball
     DrawCircleV(ball.position, ball.radius, ball.color);
+
+    // Draw the player paddle
+    DrawRectangleV(playerPaddle.position, playerPaddle.size, playerPaddle.color);
+    // Draw the enemy paddle
+    DrawRectangleV(enemyPaddle.position, enemyPaddle.size, enemyPaddle.color);
 }
 
 void MoveBall()
@@ -377,4 +400,41 @@ void MoveBall()
     {
         ball.velocity.y *= -1;
     }
+}
+
+void InitPaddles()
+{
+    /*
+        init the player paddle to the left side of the screen
+        set the paddle position to the left side of the screen with a little offset
+        set the paddle size
+    */
+
+    // Set the paddle position to the left side of the screen with a little offset
+    playerPaddle.position.x = 40;
+    playerPaddle.position.y = screenHeight / 2 - playerPaddle.size.y / 2;
+
+    // Set the paddle size
+    playerPaddle.size.x = 20;
+    playerPaddle.size.y = 100;
+
+    // Set the paddle velocity
+    playerPaddle.velocity.x = 0;
+    playerPaddle.velocity.y = 0;
+    // Set the paddle color
+    playerPaddle.color = BLUE;
+
+    // Set the paddle position to the right side and center of the screen with a little offset
+    enemyPaddle.position.x = screenWidth - 40 - enemyPaddle.size.x;
+    enemyPaddle.position.y = screenHeight / 2 - enemyPaddle.size.y / 2;
+
+    // Set the paddle size
+    enemyPaddle.size.x = 20;
+    enemyPaddle.size.x = 100;
+
+    // Set the paddle velocity
+    enemyPaddle.velocity.x = 0;
+    enemyPaddle.velocity.y = 0;
+    // Set the paddle color
+    enemyPaddle.color = RED;
 }

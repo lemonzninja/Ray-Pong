@@ -1,6 +1,6 @@
 /*
     Pong clone made with raylib
-    
+
     - Start menu with a start button and a title.
     - When game has started A ball that bounces off the walls and the paddles.
     - When game has started Two paddles that move up and down.
@@ -15,7 +15,6 @@
     - When game has started A sound effect when the ball hits the score counter.
 */
 
-
 #include "../../../src/raylib.h"
 
 #if defined(PLATFORM_WEB)
@@ -27,6 +26,15 @@ const int screenHeight = 450;
 
 // variable to hold the mouse position
 Vector2 mousePosition = {0, 0};
+
+typedef enum GameScreen // An enum to hold the screens
+{
+    START = 0,
+    INFO,
+    GAME
+} GameScreen;
+
+GameScreen currentScreen; // A variable to hold the current screen
 
 // Title Variable
 char title[20] = "Ray Pong";
@@ -40,17 +48,17 @@ typedef struct ButtonBox // A struct to hold the box data
 
 // Start Button Variables and Struct
 Rectangle StartButtonRectangle = {0, 0, 0, 0}; // Button rectangle
-bool StartButtonClicked = false;      // True if the StartButtonRectangle is clicked
+bool StartButtonClicked = false;               // True if the StartButtonRectangle is clicked
 ButtonBox StartButtonBox = {0};
 
 // info button variables
 Rectangle InfoButtonRectangle = {0, 0, 0, 0}; // Button rectangle
-bool InfoButtonClicked = false;      // True if the StartButtonRectangle is clicked
+bool InfoButtonClicked = false;               // True if the StartButtonRectangle is clicked
 ButtonBox InfoButtonBox = {0};
 
 // back button variables
 Rectangle BackButtonRectangle = {0, 0, 0, 0}; // Button rectangle
-bool BackButtonClicked = false;      // True if the StartButtonRectangle is clicked
+bool BackButtonClicked = false;               // True if the StartButtonRectangle is clicked
 ButtonBox BackButtonBox = {0};
 
 //----------------------------------------------------------------------------------
@@ -70,15 +78,14 @@ int ballVelocity = 0;
 //----------------------------------------------------------------------------------
 static void UpdateDrawFrame(void); // Update and draw one frame
 
-void DrawStart();                   // Draw Start on the start StartButtonRectangle
-void DrawInfo();                   // A function to draw the info
-void DrawGame();                   // A function to draw the game
+void UpdateStart(); // Update Start on the start StartButtonRectangle
+void DrawStart();   // Draw Start on the start StartButtonRectangle
+void UpdateInfo();  // Update Info on the start StartButtonRectangle
+void DrawInfo();    // A function to draw the info
+void DrawGame();    // A function to draw the game
 
-
-void StartGame();                  // A function to start the game when the StartButtonRectangle is clicked
-void MoveBall();                   // A function to move the ball`
-
-
+void StartGame(); // A function to start the game when the StartButtonRectangle is clicked
+void MoveBall();  // A function to move the ball`
 
 int main()
 {
@@ -87,7 +94,10 @@ int main()
 
     InitWindow(screenWidth, screenHeight, "raylib");
 
-    /* 
+    // have the START screen be the first screen
+    currentScreen = START;
+
+    /*
         The StartButton variables
         StartButtonRectangle is the rectangle that will be drawn on the screen
         StartButtonBox is the struct that holds the box data
@@ -105,7 +115,7 @@ int main()
     StartButtonBox.position.y = screenHeight / 2 - StartButtonBox.size.y / 2;
     //--------------------------------------------------------------------------------------
 
-    /* 
+    /*
         The InfoButton variables
         InfoButtonRectangle is the rectangle that will be drawn on the screen
         InfoButtonBox is the struct that holds the box data
@@ -144,8 +154,6 @@ int main()
     BackButtonBox.position.x = 1;
     BackButtonBox.position.y = 1;
     //--------------------------------------------------------------------------------------
-
-
 
     /*
         The ball variables
@@ -196,171 +204,69 @@ static void UpdateDrawFrame(void)
     // Get the mouse position
     mousePosition = GetMousePosition();
 
-    /*
-        -Check if the mouse is over the StartButtonRectangle
-        -Check if the mouse is over the InfoButtonRectangle
-        -Check if the mouse is over the StartButtonRectangle and change the color of the box
-        -Check if the mouse is over the InfoButtonRectangle and change the color of the box
-    */
-
-    // Check if the mouse is over the StartButtonRectangle
-    if (CheckCollisionPointRec(mousePosition, StartButtonRectangle) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
-    {
-        StartButtonClicked = true;
-        DrawText("Clicked", 10, 10, 20, BLACK);
-    }
     
-    // Check if the mouse is over the StartButtonRectangle and change the color of the box
-    if (CheckCollisionPointRec(mousePosition, StartButtonRectangle))
+    // a SWITCH statement to change the current game state
+    switch (currentScreen)
     {
-        // Set the box color to light gray
-        StartButtonBox.color = LIGHTGRAY;
-    }
-    else
-    {   
-        // Set the box color to dark gray
-        StartButtonBox.color = DARKGRAY;
-    }
-
-    // Check if the mouse is over the InfoButtonRectangle
-    if (CheckCollisionPointRec(mousePosition, InfoButtonRectangle) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+    case START:
     {
-        InfoButtonClicked = true;
+        UpdateStart();
     }
-    // Check if the mouse is over the InfoButtonRectangle and change the color of the box
-    if (CheckCollisionPointRec(mousePosition, InfoButtonRectangle))
-    {
-        // Set the box color to light gray
-        InfoButtonBox.color = LIGHTGRAY;
+    break;
+    case INFO:
+    { // Draw the info screen
+        UpdateInfo();
     }
-    else
-    {   
-        // Set the box color to dark gray
-        InfoButtonBox.color = DARKGRAY;
+    break;
+    case GAME:
+    { // Draw the game
+        DrawGame();
+    }
+    break;
+
+    default:
+        break;
     }
 
-
-    // Check if the mouse is over the BackButtonRectangle
-    if (CheckCollisionPointRec(mousePosition, BackButtonRectangle) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
-    {
-        BackButtonClicked = true;
-    }
-    // Check if the mouse is over the BackButtonRectangle and change the color of the box
-    if (CheckCollisionPointRec(mousePosition, BackButtonRectangle))
-    {
-        // Set the box color to light gray
-        BackButtonBox.color = LIGHTGRAY;
-    }
-    else
-    {   
-        // Set the box color to dark gray
-        BackButtonBox.color = DARKGRAY;
-    }
-
-
-    //----------------------------------------------------------------------------------
-
-    // Start the game
-    // If the StartButtonRectangle is clicked, start the game
-    if (StartButtonClicked)
-    {
-        StartGame();
-    }
-
-    // Draw
     //----------------------------------------------------------------------------------
     BeginDrawing();
 
     ClearBackground(RAYWHITE);
 
-    /* 
-        If the InfoButtonRectangle is clicked, show the info screen and hide
-        the StartButtonRectangle or if the StartButtonRectangle is clicked, 
-        hide DrawStart() and show the game
-    // */
-    // if (InfoButtonClicked || StartButtonClicked)
-    // {
-    //     // Hide the StartButtonRectangle
-    //     StartButtonRectangle.x = -1000;
-    //     StartButtonRectangle.y = -1000;
-    // }
-    
-    // if (InfoButtonClicked)
-    // {
-    //     // Draw the Info Screen
-    //     DrawInfo();
-    // }
-    // else if (StartButtonClicked)
-    // {
-    //     // Draw the game
-    //     DrawGame();
-    // }
-    // else if (BackButtonClicked)
-    // {
-    //     // Draw the Start Menu
-    //     DrawStart();
-    // }
-    // else
-    // {
-    //     // Draw the Start Menu
-    //     DrawStart();
-    // }
-
-
-
-    /*
-        If the InfoButtonRectangle is clicked, show the info screen and hide
-        the StartButtonRectangle or if the BackButtonRectangle is clicked hide 
-        the info screen and show the DrawStart() or if the StartButtonRectangle
-        is clicked, hide DrawStart() and show the game
-    */
-    if (InfoButtonClicked)
+    switch (currentScreen)
     {
-        // Hide the StartButtonRectangle
-        StartButtonRectangle.x = -1000;
-        StartButtonRectangle.y = -1000;
-        // Draw the Info Screen
+    case START:
+    {
+        DrawStart();
+    }
+    break;
+    case INFO:
+    { // Draw the info screen
         DrawInfo();
     }
-    else if (BackButtonClicked)
-    {
-        // Hide the InfoButtonRectangle
-        InfoButtonRectangle.x = -1000;
-        InfoButtonRectangle.y = -1000;
-        // Draw the Start Menu
-        DrawStart();
+    break;
+    default:
+        break;
     }
-    else if (StartButtonClicked)
-    {
-        // Hide the StartButtonRectangle
-        StartButtonRectangle.x = -1000;
-        StartButtonRectangle.y = -1000;
-        // Draw the game
-        DrawGame();
-    }
-    else
-    {
-        // Draw the Start Menu
-        DrawStart();
-    }
-
-
-
 
     EndDrawing();
     //----------------------------------------------------------------------------------
 }
 
-// A function to start the game when the StartButtonRectangle is clicked
-void StartGame()
-{
-    MoveBall();
-}
 
-void DrawGame()
+void UpdateStart()
 {
-    // Draw the ball
-    DrawCircleV(ball.position, ball.radius, ball.color);
+    // Check if the mouse is over the StartButtonRectangle
+    if (CheckCollisionPointRec(mousePosition, StartButtonRectangle) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+    {
+    }
+
+
+    // Check if the mouse is over the InfoButtonRectangle
+    if (CheckCollisionPointRec(mousePosition, InfoButtonRectangle) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+    {
+       currentScreen = INFO;
+    }
 }
 
 // Draw the start StartButtonRectangle
@@ -377,6 +283,45 @@ void DrawStart()
     DrawRectangleRec(InfoButtonRectangle, InfoButtonBox.color);
     // Draw the text "Info" in the center of the InfoButtonRectangle
     DrawText("Info", screenWidth / 2 - MeasureText("Info", 20) / 2, screenHeight / 2 + 90, 20, BLACK);
+
+    // Check if the mouse is over the StartButtonRectangle and change the color of the box
+    if (CheckCollisionPointRec(mousePosition, StartButtonRectangle))
+    {
+        // Set the box color to light gray
+        StartButtonBox.color = LIGHTGRAY;
+    }
+    else
+    {
+        // Set the box color to dark gray
+        StartButtonBox.color = DARKGRAY;
+    }
+
+    // Check if the mouse is over the InfoButtonRectangle and change the color of the box
+    if (CheckCollisionPointRec(mousePosition, InfoButtonRectangle))
+    {
+        // Set the box color to light gray
+        InfoButtonBox.color = LIGHTGRAY;
+    }
+    else
+    {
+        // Set the box color to dark gray
+        InfoButtonBox.color = DARKGRAY;
+    }
+}
+
+// A function to start the game when the StartButtonRectangle is clicked
+void StartGame()
+{
+    MoveBall();
+}
+// A function to update the info screen
+void UpdateInfo()
+{
+    // Check if the mouse is over the BackButtonRectangle
+    if (CheckCollisionPointRec(mousePosition, BackButtonRectangle) && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+    {
+        currentScreen = START;
+    }
 }
 
 // Draw the info screen
@@ -388,7 +333,25 @@ void DrawInfo()
     // Draw the back button
     DrawRectangleRec(BackButtonRectangle, BackButtonBox.color);
     // Draw the text "Back" in the center of the BackButtonRectangle
-    DrawText("Back", BackButtonBox.position.x + 20 , BackButtonBox.position.y + 10 , 20, BLACK);
+    DrawText("Back", BackButtonBox.position.x + 20, BackButtonBox.position.y + 10, 20, BLACK);
+
+    // Check if the mouse is over the BackButtonRectangle and change the color of the box
+    if (CheckCollisionPointRec(mousePosition, BackButtonRectangle))
+    {
+        // Set the box color to light gray
+        BackButtonBox.color = LIGHTGRAY;
+    }
+    else
+    {
+        // Set the box color to dark gray
+        BackButtonBox.color = DARKGRAY;
+    }
+}
+
+void DrawGame()
+{
+    // Draw the ball
+    DrawCircleV(ball.position, ball.radius, ball.color);
 }
 
 void MoveBall()

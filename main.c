@@ -92,7 +92,7 @@ Paddle enemyPaddle = {0};
 //----------------------------------------------------------------------------------
 static void UpdateDrawFrame(void); // Update and draw one frame
 
-void InitButtons(); // A function to initialize the buttons
+void InitButtons();     // A function to initialize the buttons
 void UpdateStartMenu(); // Update Start on the start StartButtonRectangle
 void DrawStartMenu();   // Draw Start on the start StartButtonRectangle
 void UpdateInfoMenu();  // Update Info on the start StartButtonRectangle
@@ -100,7 +100,7 @@ void DrawInfoMenu();    // A function to draw the info
 
 void InitPaddles(); // A function to initialize the paddles
 
-void DrawGame();  // A function to draw the game
+void DrawGame();      // A function to draw the game
 void StartGameMenu(); // A function to start the game when the StartButtonRectangle is clicked
 
 void MoveBall(); // A function to move the ball`
@@ -133,7 +133,6 @@ int main()
     ball.velocity.y = ballVelocity;
     // Set the ball color
     ball.color = RED;
-    
 
     //--------------------------------------------------------------------------------------
 
@@ -184,8 +183,8 @@ static void UpdateDrawFrame(void)
     }
     break;
     case GAME:
-    { // Draw the game
-        DrawGame();
+    {
+        MoveBall();
     }
     break;
 
@@ -210,6 +209,10 @@ static void UpdateDrawFrame(void)
         DrawInfoMenu();
     }
     break;
+    case GAME:
+    { // Draw the game
+        DrawGame();
+    }
     default:
         break;
     }
@@ -218,12 +221,13 @@ static void UpdateDrawFrame(void)
     //----------------------------------------------------------------------------------
 }
 
-void InitButtons(){
-/*
-        The StartButton variables
-        StartButtonRectangle is the rectangle that will be drawn on the screen
-        StartButtonBox is the struct that holds the box data
-    */
+void InitButtons()
+{
+    /*
+            The StartButton variables
+            StartButtonRectangle is the rectangle that will be drawn on the screen
+            StartButtonBox is the struct that holds the box data
+        */
     StartButtonRectangle.width = 100;
     StartButtonRectangle.height = 50;
     // Set the StartButtonRectangle position
@@ -376,9 +380,12 @@ void DrawInfoMenu()
 void InitPaddles()
 {
     /*
-        init the player paddle to the left side of the screen
-        set the paddle position to the left side of the screen with a little offset
-        set the paddle size
+        init the playerPaddle
+        -playerPaddle is on the left side of the screen with a little offset
+        -enemyPaddle is on the right side of the screen with a little offset
+        -set the paddle size
+        -set the paddle velocity
+        -set the paddle color
     */
 
     // Set the paddle position to the left side of the screen with a little offset
@@ -398,7 +405,7 @@ void InitPaddles()
     // Set the paddle position to the right side and center of the screen with a little offset
     enemyPaddle.position.x = screenWidth - 40 - enemyPaddle.size.x;
     enemyPaddle.position.y = screenHeight / 2 - enemyPaddle.size.y / 2;
-    
+
     // Set the paddle size
     enemyPaddle.size.x = 20;
     enemyPaddle.size.y = 100;
@@ -409,7 +416,6 @@ void InitPaddles()
 
     // Set the paddle color
     enemyPaddle.color = RED;
-    
 }
 
 void DrawGame()
@@ -430,20 +436,49 @@ void MoveBall()
     ball.position.y += ball.velocity.y;
 
     // Check for collision with the walls
-    if (ball.position.x >= screenWidth - ball.radius)
+    if (ball.position.y >= screenHeight - ball.radius || ball.position.y <= ball.radius)
     {
-        ball.velocity.x *= -1;
-    }
-    else if (ball.position.x <= 0 + ball.radius)
-    {
-        ball.velocity.x *= -1;
-    }
-    else if (ball.position.y >= screenHeight - ball.radius)
-    {
+        // Invert the ball velocity
         ball.velocity.y *= -1;
     }
-    else if (ball.position.y <= 0 + ball.radius)
+
+    // Check for collision with the player paddle
+    if (CheckCollisionCircleRec(ball.position, ball.radius,
+                                (Rectangle){playerPaddle.position.x,
+                                            playerPaddle.position.y, playerPaddle.size.x,
+                                            playerPaddle.size.y}))
     {
-        ball.velocity.y *= -1;
+        // Invert the ball velocity
+        ball.velocity.x *= -1;
+    }
+
+    // Check for collision with the enemy paddle
+    if (CheckCollisionCircleRec(ball.position, ball.radius, (Rectangle){enemyPaddle.position.x,
+                                                                       enemyPaddle.position.y, enemyPaddle.size.x,
+                                                                       enemyPaddle.size.y}))
+    {
+        // Invert the ball velocity
+        ball.velocity.x *= -1;
+    }
+
+    // Check if the ball is out of the screen and reset the ball
+    if (ball.position.x >= screenWidth + ball.radius)
+    {
+        // Reset the ball position
+        ball.position.x = screenWidth / 2;
+        ball.position.y = screenHeight / 2;
+
+        // Reset the ball velocity
+        ball.velocity = (Vector2){5, 5};
+    
+    }
+    else if (ball.position.x <= -ball.radius)
+    {
+        // Reset the ball position
+        ball.position.x = screenWidth / 2;
+        ball.position.y = screenHeight / 2;
+    
+        // Reset the ball velocity
+        ball.velocity = (Vector2){5, 5};
     }
 }

@@ -75,8 +75,7 @@ typedef struct Ball
 } Ball;
 Ball ball = {0};
 int ballVelocity = 0;
-float ballSpeed;
-
+int ballSpeed = 0;
 // a struct to hold the paddle data
 typedef struct Paddle
 {
@@ -106,7 +105,8 @@ void InitBall();    // A function to initialize the ball
 void DrawGame();            // A function to draw the game
 void UpdateStartGameMenu(); // A function to start the game when the StartButtonRectangle is clicked
 
-void MoveBall(); // A function to move the ball`
+void UpdatePaddles(); // A function to update the paddles
+void UpdateBall();    // A function to move the ball`
 
 // Update and draw game frame
 static void UpdateDrawFrame(void)
@@ -132,7 +132,8 @@ static void UpdateDrawFrame(void)
     break;
     case GAME:
     {
-        MoveBall();
+        UpdatePaddles();
+        UpdateBall();
     }
     break;
 
@@ -288,7 +289,7 @@ void DrawStartMenu()
 // A function to start the game when the StartButtonRectangle is clicked
 void UpdateStartGameMenu()
 {
-    MoveBall();
+    UpdateBall();
 }
 
 // A function to update the info screen
@@ -345,8 +346,7 @@ void InitPaddles()
     playerPaddle.size.y = 100;
 
     // Set the paddle velocity
-    playerPaddle.velocity.x = 0;
-    playerPaddle.velocity.y = 0;
+    playerPaddle.velocity.y = 300;
     // Set the paddle color
     playerPaddle.color = BLUE;
 
@@ -359,8 +359,7 @@ void InitPaddles()
     enemyPaddle.size.y = 100;
 
     // Set the paddle velocity
-    enemyPaddle.velocity.x = 0;
-    enemyPaddle.velocity.y = 0;
+    enemyPaddle.velocity.y = 200;
 
     // Set the paddle color
     enemyPaddle.color = RED;
@@ -373,8 +372,10 @@ void InitBall()
         ball is the struct that holds the ball data
     */
 
+    ballSpeed = 300;
+
     // Set the ball velocity
-    ballVelocity = 5;
+    ballVelocity = ballSpeed;
     // Set the ball size
     ball.radius = 10;
     // Set the ball position
@@ -398,11 +399,53 @@ void DrawGame()
     DrawRectangleV(enemyPaddle.position, enemyPaddle.size, enemyPaddle.color);
 }
 
-void MoveBall()
+void UpdatePaddles()
+{
+    // move the player paddle with W and S
+    if (IsKeyDown(KEY_W))
+    {
+        playerPaddle.position.y -= playerPaddle.velocity.y * GetFrameTime();
+    }
+    else if (IsKeyDown(KEY_S))
+    {
+        playerPaddle.position.y += playerPaddle.velocity.y * GetFrameTime();
+    }
+    // Keep the player paddle inside the screen
+    if (playerPaddle.position.y <= 0)
+    {
+        playerPaddle.position.y = 0;
+    }
+    else if (playerPaddle.position.y >= screenHeight - playerPaddle.size.y)
+    {
+        playerPaddle.position.y = screenHeight - playerPaddle.size.y;
+    }
+
+    // move the enemy paddle with ai logic less actuate than the player paddle  (the enemy paddle is a little bit slower and not jerky)
+    if (ball.position.y > enemyPaddle.position.y + enemyPaddle.size.y / 2)
+    {
+        enemyPaddle.position.y += enemyPaddle.velocity.y * GetFrameTime();
+    }
+    else if (ball.position.y < enemyPaddle.position.y + enemyPaddle.size.y / 2)
+    {
+        enemyPaddle.position.y -= enemyPaddle.velocity.y * GetFrameTime();
+    }
+
+    // Keep the enemy paddle inside the screen
+    if (enemyPaddle.position.y <= 0)
+    {
+        enemyPaddle.position.y = 0;
+    }
+    else if (enemyPaddle.position.y >= screenHeight - enemyPaddle.size.y)
+    {
+        enemyPaddle.position.y = screenHeight - enemyPaddle.size.y;
+    }
+}
+
+void UpdateBall()
 {
     // Move the ball
-    ball.position.x += ball.velocity.x;
-    ball.position.y += ball.velocity.y;
+    ball.position.x += ball.velocity.x * GetFrameTime();
+    ball.position.y += ball.velocity.y * GetFrameTime();
 
     // Check for collision with the walls
     if (ball.position.y >= screenHeight - ball.radius || ball.position.y <= ball.radius)
@@ -411,36 +454,21 @@ void MoveBall()
         ball.velocity.y *= -1;
     }
 
-    // Check for collision with the player paddle
-    if (CheckCollisionCircleRec(ball.position, ball.radius,
-                                (Rectangle){playerPaddle.position.x,
-                                            playerPaddle.position.y, playerPaddle.size.x,
-                                            playerPaddle.size.y}))
+    // Check if the ball hits the player paddle and bounce it off the paddle and invert the x,y velocity
+    if (CheckCollisionCircleRec(ball.position, ball.radius, (Rectangle){playerPaddle.position.x, playerPaddle.position.y, playerPaddle.size.x, playerPaddle.size.y}))
     {
-        float angle = atan2(ball.position.y - playerPaddle.position.y, ball.position.x - playerPaddle.size.x); // Get the angle of the ball
-
-        // using angle make the ball bounce off the paddle and invert the x,y velocity
-
-        ball.velocity.x = cos(angle) * +5.5;
-        ball.velocity.y = sin(angle) * +5.5;
-    }
-
-    if (CheckCollisionCircleRec(ball.position, ball.radius, (Rectangle){enemyPaddle.position.x, enemyPaddle.position.y, enemyPaddle.size.x, enemyPaddle.size.y}))
-    {
-        float angle = atan2(ball.position.y - enemyPaddle.position.y, ball.position.x - enemyPaddle.size.x); // Get the angle of the ball
-
-        // using angle make the ball bounce off the paddle and invert the x,y velocity
-        ball.velocity.x = cos(angle) * -5.5;
+        // bounce the ball off the paddle and invert the x,y velocity in the direction it came from
+        ball.velocity.x *= -1;
+        ball.velocity.y *= +1;
     }
 
     // Check if the ball hits the enemy paddle and bounce it off the paddle and invert the x,y velocity
-    // if (CheckCollisionCircleRec(ball.position, ball.radius, (Rectangle){enemyPaddle.position.x, enemyPaddle.position.y, enemyPaddle.size.x, enemyPaddle.size.y}))
-    // {
-    //     float angle = (ball.position.y - enemyPaddle.position.y) / enemyPaddle.size.y; // Get the angle of the ball
-
-    //     // using angle make the ball bounce off the paddle and invert the x,y velocity
-    //     ball.velocity.x = -5.5 * sin(angle);
-    // }
+    if (CheckCollisionCircleRec(ball.position, ball.radius, (Rectangle){enemyPaddle.position.x, enemyPaddle.position.y, enemyPaddle.size.x, enemyPaddle.size.y}))
+    {
+        // bounce the ball off the paddle and invert the x,y velocity in the direction it came from
+        ball.velocity.x *= -1;
+        ball.velocity.y *= +1;
+    }
 
     // Check if the ball is out of the screen and reset the ball
     if (ball.position.x >= screenWidth + ball.radius)
@@ -448,9 +476,9 @@ void MoveBall()
         // Reset the ball position
         ball.position.x = screenWidth / 2;
         ball.position.y = screenHeight / 2;
-
+    
         // Reset the ball velocity
-        ball.velocity = (Vector2){5, 5};
+        ball.velocity = (Vector2){ballSpeed, ballSpeed};
     }
     else if (ball.position.x <= -ball.radius)
     {
@@ -459,7 +487,8 @@ void MoveBall()
         ball.position.y = screenHeight / 2;
 
         // Reset the ball velocity
-        ball.velocity = (Vector2){5, 5};
+        ball.velocity = (Vector2){ballSpeed, ballSpeed};
+
     }
 }
 

@@ -16,6 +16,7 @@
 */
 
 #include "../../../src/raylib.h"
+#include "math.h"
 
 #if defined(PLATFORM_WEB)
 #include <emscripten/emscripten.h>
@@ -61,7 +62,6 @@ ButtonBox InfoButtonBox = {0};
 Rectangle BackButtonRectangle = {0, 0, 0, 0}; // Button rectangle
 bool BackButtonClicked = false;               // True if the StartButtonRectangle is clicked
 ButtonBox BackButtonBox = {0};
-
 //----------------------------------------------------------------------------------
 
 // Ball Struct
@@ -69,11 +69,13 @@ typedef struct Ball
 {
     Vector2 position;
     Vector2 velocity;
+
     float radius;
     Color color;
 } Ball;
 Ball ball = {0};
 int ballVelocity = 0;
+float ballSpeed;
 
 // a struct to hold the paddle data
 typedef struct Paddle
@@ -99,66 +101,12 @@ void UpdateInfoMenu();  // Update Info on the start StartButtonRectangle
 void DrawInfoMenu();    // A function to draw the info
 
 void InitPaddles(); // A function to initialize the paddles
+void InitBall();    // A function to initialize the ball
 
-void DrawGame();      // A function to draw the game
-void StartGameMenu(); // A function to start the game when the StartButtonRectangle is clicked
+void DrawGame();            // A function to draw the game
+void UpdateStartGameMenu(); // A function to start the game when the StartButtonRectangle is clicked
 
 void MoveBall(); // A function to move the ball`
-
-int main()
-{
-    // Initialization
-    //--------------------------------------------------------------------------------------
-
-    InitWindow(screenWidth, screenHeight, "raylib");
-
-    InitButtons();
-
-    // have the START screen be the first screen
-    currentScreen = GAME;
-
-    /*
-        The ball variables
-        ball is the struct that holds the ball data
-    */
-    // Set the ball velocity
-    ballVelocity = 5;
-    // Set the ball size
-    ball.radius = 10;
-    // Set the ball position
-    ball.position.x = screenWidth / 2 - ball.radius / 2;
-    ball.position.y = screenHeight / 2 - ball.radius / 2;
-    // Set the ball velocity
-    ball.velocity.x = ballVelocity;
-    ball.velocity.y = ballVelocity;
-    // Set the ball color
-    ball.color = RED;
-
-    //--------------------------------------------------------------------------------------
-
-    // Initialize the paddles
-    InitPaddles();
-
-#if defined(PLATFORM_WEB)
-    emscripten_set_main_loop(UpdateDrawFrame, 60, 1);
-#else
-    SetTargetFPS(60); // Set our game to run at 60 frames-per-second
-    //--------------------------------------------------------------------------------------
-
-    // Main game loop
-    while (!WindowShouldClose()) // Detect window close StartButtonRectangle or ESC key
-    {
-        UpdateDrawFrame();
-    }
-#endif
-
-    // De-Initialization
-    //--------------------------------------------------------------------------------------
-    CloseWindow(); //` Close window and OpenGL context
-    //--------------------------------------------------------------------------------------
-
-    return 0;
-}
 
 // Update and draw game frame
 static void UpdateDrawFrame(void)
@@ -338,7 +286,7 @@ void DrawStartMenu()
 }
 
 // A function to start the game when the StartButtonRectangle is clicked
-void StartGameMenu()
+void UpdateStartGameMenu()
 {
     MoveBall();
 }
@@ -390,7 +338,7 @@ void InitPaddles()
 
     // Set the paddle position to the left side of the screen with a little offset
     playerPaddle.position.x = 40;
-    playerPaddle.position.y = screenHeight / 2 - playerPaddle.size.y / 2;
+    playerPaddle.position.y = screenHeight / 2 - playerPaddle.size.y / 2 + 60;
 
     // Set the paddle size
     playerPaddle.size.x = 20;
@@ -404,7 +352,7 @@ void InitPaddles()
 
     // Set the paddle position to the right side and center of the screen with a little offset
     enemyPaddle.position.x = screenWidth - 40 - enemyPaddle.size.x;
-    enemyPaddle.position.y = screenHeight / 2 - enemyPaddle.size.y / 2;
+    enemyPaddle.position.y = screenHeight / 2 - enemyPaddle.size.y / 2 + 60;
 
     // Set the paddle size
     enemyPaddle.size.x = 20;
@@ -416,6 +364,27 @@ void InitPaddles()
 
     // Set the paddle color
     enemyPaddle.color = RED;
+}
+
+void InitBall()
+{
+    /*
+        The ball variables
+        ball is the struct that holds the ball data
+    */
+
+    // Set the ball velocity
+    ballVelocity = 5;
+    // Set the ball size
+    ball.radius = 10;
+    // Set the ball position
+    ball.position.x = screenWidth / 2 - ball.radius / 2;
+    ball.position.y = screenHeight / 2 - ball.radius / 2;
+    // Set the ball velocity
+    ball.velocity.x = ballVelocity;
+    ball.velocity.y = ballVelocity;
+    // Set the ball color
+    ball.color = RED;
 }
 
 void DrawGame()
@@ -448,18 +417,30 @@ void MoveBall()
                                             playerPaddle.position.y, playerPaddle.size.x,
                                             playerPaddle.size.y}))
     {
-        // Invert the ball velocity
-        ball.velocity.x *= -1;
+        float angle = atan2(ball.position.y - playerPaddle.position.y, ball.position.x - playerPaddle.size.x); // Get the angle of the ball
+
+        // using angle make the ball bounce off the paddle and invert the x,y velocity
+
+        ball.velocity.x = cos(angle) * +5.5;
+        ball.velocity.y = sin(angle) * +5.5;
     }
 
-    // Check for collision with the enemy paddle
-    if (CheckCollisionCircleRec(ball.position, ball.radius, (Rectangle){enemyPaddle.position.x,
-                                                                       enemyPaddle.position.y, enemyPaddle.size.x,
-                                                                       enemyPaddle.size.y}))
+    if (CheckCollisionCircleRec(ball.position, ball.radius, (Rectangle){enemyPaddle.position.x, enemyPaddle.position.y, enemyPaddle.size.x, enemyPaddle.size.y}))
     {
-        // Invert the ball velocity
-        ball.velocity.x *= -1;
+        float angle = atan2(ball.position.y - enemyPaddle.position.y, ball.position.x - enemyPaddle.size.x); // Get the angle of the ball
+
+        // using angle make the ball bounce off the paddle and invert the x,y velocity
+        ball.velocity.x = cos(angle) * -5.5;
     }
+
+    // Check if the ball hits the enemy paddle and bounce it off the paddle and invert the x,y velocity
+    // if (CheckCollisionCircleRec(ball.position, ball.radius, (Rectangle){enemyPaddle.position.x, enemyPaddle.position.y, enemyPaddle.size.x, enemyPaddle.size.y}))
+    // {
+    //     float angle = (ball.position.y - enemyPaddle.position.y) / enemyPaddle.size.y; // Get the angle of the ball
+
+    //     // using angle make the ball bounce off the paddle and invert the x,y velocity
+    //     ball.velocity.x = -5.5 * sin(angle);
+    // }
 
     // Check if the ball is out of the screen and reset the ball
     if (ball.position.x >= screenWidth + ball.radius)
@@ -470,15 +451,54 @@ void MoveBall()
 
         // Reset the ball velocity
         ball.velocity = (Vector2){5, 5};
-    
     }
     else if (ball.position.x <= -ball.radius)
     {
         // Reset the ball position
         ball.position.x = screenWidth / 2;
         ball.position.y = screenHeight / 2;
-    
+
         // Reset the ball velocity
         ball.velocity = (Vector2){5, 5};
     }
+}
+
+int main()
+{
+    // Initialization
+    //--------------------------------------------------------------------------------------
+
+    InitWindow(screenWidth, screenHeight, "raylib");
+
+    InitButtons();
+
+    // have the START screen be the first screen
+    currentScreen = GAME;
+
+    // Initialize the paddles
+    InitPaddles();
+
+    InitBall();
+
+    //--------------------------------------------------------------------------------------
+
+#if defined(PLATFORM_WEB)
+    emscripten_set_main_loop(UpdateDrawFrame, 60, 1);
+#else
+    SetTargetFPS(60); // Set our game to run at 60 frames-per-second
+    //--------------------------------------------------------------------------------------
+
+    // Main game loop
+    while (!WindowShouldClose()) // Detect window close StartButtonRectangle or ESC key
+    {
+        UpdateDrawFrame();
+    }
+#endif
+
+    // De-Initialization
+    //--------------------------------------------------------------------------------------
+    CloseWindow(); //` Close window and OpenGL context
+    //--------------------------------------------------------------------------------------
+
+    return 0;
 }

@@ -93,6 +93,10 @@ Paddle enemyPaddle = {0};
 int playerScore = 0;
 int enemyScore = 0;
 
+
+bool pause = false; // A variable to hold the pause state
+
+bool gameReset = false; // A variable to hold the game reset state
 // Local Functions Declaration
 //----------------------------------------------------------------------------------
 static void UpdateDrawFrame(void); // Update and draw one frame
@@ -136,8 +140,39 @@ static void UpdateDrawFrame(void)
     break;
     case GAME:
     {
-        UpdatePaddles();
-        UpdateBall();
+        // IF q is pressed pause the game
+        if (IsKeyPressed(KEY_Q))
+        {
+            pause = !pause;
+        }
+
+        // IF the game is not paused update the game
+        if (!pause)
+        {
+            UpdatePaddles();
+            UpdateBall();
+        }
+
+        // if pause is true draw the pause menu
+        if (pause)
+        {
+            DrawText("PAUSED", screenWidth / 2 - 50, screenHeight / 2 - 50, 20, BLACK);
+                         // Draw the back button
+            DrawRectangleRec(BackButtonRectangle, BLACK);
+            DrawText("Back", BackButtonRectangle.x + 10, BackButtonRectangle.y + 10, 20, WHITE);
+
+            // if the back button is clicked change the current screen to the start screen
+            if (CheckCollisionPointRec(mousePosition, BackButtonRectangle))
+            {
+                if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+                {
+                    currentScreen = START;
+
+                    // reset the game
+                    gameReset = true;
+                }
+            }
+        }   
     }
     break;
 
@@ -408,6 +443,26 @@ void DrawGame()
     DrawRectangleV(playerPaddle.position, playerPaddle.size, playerPaddle.color);
     // Draw the enemy paddle
     DrawRectangleV(enemyPaddle.position, enemyPaddle.size, enemyPaddle.color);
+
+    // reset the game
+    if (gameReset)
+    {
+        // reset paddles Y position
+        playerPaddle.position.y = screenHeight / 2 - playerPaddle.size.y / 2 + 60;
+        enemyPaddle.position.y = screenHeight / 2 - enemyPaddle.size.y / 2 + 60;
+
+        // reset ball position
+        ball.position.x = screenWidth / 2 - ball.radius / 2;
+        ball.position.y = screenHeight / 2 - ball.radius / 2;
+
+        // reset scores
+        playerScore = 0;
+        enemyScore = 0;
+
+        // reset the gameReset variable
+        gameReset = false;
+        pause = false;
+    }
 }
 
 void UpdatePaddles()

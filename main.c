@@ -89,6 +89,10 @@ typedef struct Paddle
 Paddle playerPaddle = {0};
 Paddle enemyPaddle = {0};
 
+// score variables
+int playerScore = 0;
+int enemyScore = 0;
+
 // Local Functions Declaration
 //----------------------------------------------------------------------------------
 static void UpdateDrawFrame(void); // Update and draw one frame
@@ -390,6 +394,13 @@ void InitBall()
 
 void DrawGame()
 {
+    // Draw the score
+    DrawText(TextFormat("%i", playerScore), screenWidth / 2 - 50, 50, 40, BLACK);
+    DrawText(TextFormat("%i", enemyScore), screenWidth / 2 + 50, 50, 40, BLACK);
+
+    // Draw A line in the middle of the screen
+    DrawLine(screenWidth / 2, 0, screenWidth / 2, screenHeight, BLACK);
+
     // Draw the ball
     DrawCircleV(ball.position, ball.radius, ball.color);
 
@@ -476,7 +487,10 @@ void UpdateBall()
         // Reset the ball position
         ball.position.x = screenWidth / 2;
         ball.position.y = screenHeight / 2;
-    
+
+        // add a point to the player score
+        playerScore++;
+
         // Reset the ball velocity
         ball.velocity = (Vector2){ballSpeed, ballSpeed};
     }
@@ -485,6 +499,9 @@ void UpdateBall()
         // Reset the ball position
         ball.position.x = screenWidth / 2;
         ball.position.y = screenHeight / 2;
+
+        // add a point to the enemy score
+        enemyScore++;
 
         // Reset the ball velocity
         ball.velocity = (Vector2){ballSpeed, ballSpeed};

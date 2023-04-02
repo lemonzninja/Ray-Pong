@@ -16,7 +16,6 @@
 */
 
 #include "../../../src/raylib.h"
-#include "math.h"
 
 #if defined(PLATFORM_WEB)
 #include <emscripten/emscripten.h>
@@ -32,7 +31,8 @@ typedef enum GameScreen // An enum to hold the screens
 {
     START = 0,
     INFO,
-    GAME
+    GAME,
+    WINLOSE
 } GameScreen;
 
 GameScreen currentScreen; // A variable to hold the current screen
@@ -93,10 +93,12 @@ Paddle enemyPaddle = {0};
 int playerScore = 0;
 int enemyScore = 0;
 
-
 bool pause = false; // A variable to hold the pause state
 
 bool gameReset = false; // A variable to hold the game reset state
+
+bool isGameOver = false; // A variable to hold the game over state
+
 // Local Functions Declaration
 //----------------------------------------------------------------------------------
 static void UpdateDrawFrame(void); // Update and draw one frame
@@ -110,11 +112,15 @@ void DrawInfoMenu();    // A function to draw the info
 void InitPaddles(); // A function to initialize the paddles
 void InitBall();    // A function to initialize the ball
 
+void UpdateGame();          // A function to update the game
 void DrawGame();            // A function to draw the game
 void UpdateStartGameMenu(); // A function to start the game when the StartButtonRectangle is clicked
 
 void UpdatePaddles(); // A function to update the paddles
 void UpdateBall();    // A function to move the ball`
+
+void ResetGame();   // A function to reset the game
+void WinLoseMenu(); // A function to draw the win lose menu
 
 // Update and draw game frame
 static void UpdateDrawFrame(void)
@@ -140,42 +146,22 @@ static void UpdateDrawFrame(void)
     break;
     case GAME:
     {
-        // IF q is pressed pause the game
-        if (IsKeyPressed(KEY_Q))
-        {
-            pause = !pause;
-        }
-
-        // IF the game is not paused update the game
-        if (!pause)
-        {
-            UpdatePaddles();
-            UpdateBall();
-        }
-
-        // if pause is true draw the pause menu
-        if (pause)
-        {
-            DrawText("PAUSED", screenWidth / 2 - 50, screenHeight / 2 - 50, 20, BLACK);
-                         // Draw the back button
-            DrawRectangleRec(BackButtonRectangle, BLACK);
-            DrawText("Back", BackButtonRectangle.x + 10, BackButtonRectangle.y + 10, 20, WHITE);
-
-            // if the back button is clicked change the current screen to the start screen
-            if (CheckCollisionPointRec(mousePosition, BackButtonRectangle))
-            {
-                if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
-                {
-                    currentScreen = START;
-
-                    // reset the game
-                    gameReset = true;
-                }
-            }
-        }   
+        UpdateGame();
     }
     break;
+    case WINLOSE:
+    {
+        WinLoseMenu();
 
+        if (IsKeyPressed(KEY_R))
+        {
+        
+            // Reset the game
+            ResetGame();
+        
+        }
+        
+    }
     default:
         break;
     }
@@ -427,6 +413,59 @@ void InitBall()
     ball.color = RED;
 }
 
+void UpdateGame()
+{
+    // IF q is pressed pause the game
+    if (IsKeyPressed(KEY_Q))
+    {
+        pause = !pause;
+    }
+
+    // IF the game is not paused update the game
+    if (!pause)
+    {
+        UpdatePaddles();
+        UpdateBall();
+    }
+
+    // if pause is true draw the pause menu
+    if (pause)
+    {
+        DrawText("PAUSED", screenWidth / 2 - 50, screenHeight / 2 - 50, 20, BLACK);
+        // Draw the back button
+        DrawRectangleRec(BackButtonRectangle, BLACK);
+        DrawText("Back", BackButtonRectangle.x + 10, BackButtonRectangle.y + 10, 20, WHITE);
+
+        // if the back button is clicked change the current screen to the start screen
+        if (CheckCollisionPointRec(mousePosition, BackButtonRectangle))
+        {
+            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+            {
+                currentScreen = START;
+
+                // reset the game
+                gameReset = true;
+            }
+        }
+    }
+
+    if (playerScore == 10 || enemyScore == 2)
+    {
+        isGameOver = true;
+    }
+
+    // if the player or enemy score is 10 change the current screen to the win lose menu
+    if (isGameOver)
+    {
+        currentScreen = WINLOSE;
+    }
+    // reset the game
+    if (gameReset)
+    {
+        ResetGame();
+    }
+}
+
 void DrawGame()
 {
     // Draw the score
@@ -443,26 +482,6 @@ void DrawGame()
     DrawRectangleV(playerPaddle.position, playerPaddle.size, playerPaddle.color);
     // Draw the enemy paddle
     DrawRectangleV(enemyPaddle.position, enemyPaddle.size, enemyPaddle.color);
-
-    // reset the game
-    if (gameReset)
-    {
-        // reset paddles Y position
-        playerPaddle.position.y = screenHeight / 2 - playerPaddle.size.y / 2 + 60;
-        enemyPaddle.position.y = screenHeight / 2 - enemyPaddle.size.y / 2 + 60;
-
-        // reset ball position
-        ball.position.x = screenWidth / 2 - ball.radius / 2;
-        ball.position.y = screenHeight / 2 - ball.radius / 2;
-
-        // reset scores
-        playerScore = 0;
-        enemyScore = 0;
-
-        // reset the gameReset variable
-        gameReset = false;
-        pause = false;
-    }
 }
 
 void UpdatePaddles()
@@ -560,8 +579,49 @@ void UpdateBall()
 
         // Reset the ball velocity
         ball.velocity = (Vector2){ballSpeed, ballSpeed};
-
     }
+}
+
+void WinLoseMenu()
+{
+    if (playerScore == 10)
+    {
+        DrawText("You Win!", screenWidth / 2 - 50, screenHeight / 2 - 50, 40, BLACK);
+        DrawText("Press R to restart", screenWidth / 2 - 100, screenHeight / 2, 40, BLACK);
+    }
+    else if (enemyScore == 2)
+    {
+        DrawText("You Lose!", screenWidth / 2 - 50, screenHeight / 2 - 50, 40, BLACK);
+        DrawText("Press R to restart", screenWidth / 2 - 100, screenHeight / 2, 40, BLACK);
+    }
+}
+
+void ResetGame()
+{
+    // reset the player paddle position
+    playerPaddle.position.y = screenHeight / 2 - playerPaddle.size.y / 2 + 60;
+
+    // reset the enemy paddle position
+    enemyPaddle.position.y = screenHeight / 2 - enemyPaddle.size.y / 2 + 60;
+
+    // reset ball position
+    ball.position.x = screenWidth / 2 - ball.radius / 2;
+    ball.position.y = screenHeight / 2 - ball.radius / 2;
+
+    // reset ball velocity
+    ball.velocity = (Vector2){ballSpeed, ballSpeed};
+
+    // reset scores
+    playerScore = 0;
+    enemyScore = 0;
+
+    // reset the gameReset variable
+    gameReset = false;
+    pause = false;
+    isGameOver = false;
+
+    // reset the game state
+    currentScreen = START;
 }
 
 int main()
